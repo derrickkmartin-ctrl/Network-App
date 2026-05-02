@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SF Trip">
+<title>Ebony — SF Trip</title>
+<style>
+/* ── Reset & Base ───────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F0;min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:430px;background:#F5F5F0;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Top Bar ────────────────────────────────────────────────── */
+.topbar{background:#fff;padding:14px 16px 11px;border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:0;z-index:20}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.topbar-title{font-size:17px;font-weight:600;color:#1a1a1a}
+.topbar-sub{font-size:12px;color:#888}
+.search-wrap{position:relative}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#aaa;pointer-events:none}
+#search{width:100%;padding:9px 12px 9px 34px;border:1px solid rgba(0,0,0,0.12);border-radius:10px;font-size:15px;background:#F5F5F0;color:#1a1a1a;outline:none;-webkit-appearance:none}
+#search::placeholder{color:#aaa}
+#search:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+
+/* ── Nav ────────────────────────────────────────────────────── */
+.nav{display:flex;background:#fff;border-bottom:1px solid rgba(0,0,0,0.08);position:sticky;top:74px;z-index:19}
+.nav-btn{flex:1;padding:10px 2px;font-size:12px;border:none;background:none;cursor:pointer;color:#999;border-bottom:2px solid transparent;font-weight:500;transition:color .15s}
+.nav-btn.active{color:#534AB7;border-bottom-color:#534AB7}
+
+/* ── Content ────────────────────────────────────────────────── */
+.content{padding:12px 12px 40px;flex:1}
+.section-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px 2px}
+.section-label:first-child{margin-top:4px}
+
+/* ── Person Cards ───────────────────────────────────────────── */
+.person-card{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.person-card:active{border-color:rgba(83,74,183,0.3)}
+.card-top{display:flex;align-items:flex-start;gap:12px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.av-sp{background:#FFF3E0;color:#8D5000}
+.av-t1{background:#EEEDFE;color:#3C3489}
+.av-t2{background:#E1F5EE;color:#085041}
+.av-t3{background:#F0F0EC;color:#555}
+.av-t4{background:#FAECEA;color:#8B2E2E}
+.card-name{font-size:15px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.card-org{font-size:12px;color:#888;margin-top:2px}
+.card-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500}
+.b-t1{background:#EEEDFE;color:#3C3489}
+.b-t2{background:#E1F5EE;color:#085041}
+.b-t3{background:#F0F0EC;color:#555}
+.b-t4{background:#FAECEA;color:#8B2E2E}
+.b-sp{background:#FFF3E0;color:#8D5000}
+.b-cs{background:#E6F1FB;color:#0C447C}
+.b-met{background:#EAF3DE;color:#2A6010}
+.b-fu{background:#FFF0D6;color:#7A4800}
+.b-synced{background:#E1F5EE;color:#085041}
+.card-angle{font-size:12px;color:#666;margin-top:9px;line-height:1.55;border-left:2px solid #CECBF6;padding-left:9px}
+
+/* ── Detail View ────────────────────────────────────────────── */
+.detail-back{display:flex;align-items:center;gap:5px;font-size:14px;color:#666;cursor:pointer;margin-bottom:14px;padding:4px 0}
+.detail-back svg{width:18px;height:18px}
+.detail-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;padding:16px;background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,0.08)}
+.detail-avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0}
+.detail-name{font-size:18px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.detail-org{font-size:13px;color:#888;margin-top:3px}
+.detail-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.block{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.block-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.block-label-warn{color:#8B2E2E}
+.block-text{font-size:14px;color:#2a2a2a;line-height:1.65}
+.block-text-warn{color:#7A1E1E}
+
+/* ── Warmth selector ────────────────────────────────────────── */
+.warmth-row{display:flex;gap:8px;margin-bottom:10px}
+.warmth-btn{flex:1;padding:9px 4px;border:1px solid rgba(0,0,0,0.12);border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;background:#F5F5F0;color:#666;text-align:center;transition:all .15s}
+.warmth-btn.w-warm.sel{background:#EAF3DE;border-color:#6ab04c;color:#2A6010}
+.warmth-btn.w-luke.sel{background:#FFF0D6;border-color:#f0932b;color:#7A4800}
+.warmth-btn.w-cold.sel{background:#E6F1FB;border-color:#4a90d9;color:#0C447C}
+
+/* ── Note + Action Inputs ───────────────────────────────────── */
+.note-existing{font-size:13px;color:#444;line-height:1.6;white-space:pre-wrap;padding:10px 12px;background:#F8F7FF;border-radius:8px;margin-bottom:10px;border-left:3px solid #CECBF6}
+.note-area{width:100%;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:10px 12px;font-size:14px;background:#F5F5F0;color:#1a1a1a;resize:none;min-height:72px;font-family:inherit;outline:none}
+.note-area:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+.note-area::placeholder{color:#aaa}
+.fu-input{width:100%;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:9px 12px;font-size:14px;background:#F5F5F0;color:#1a1a1a;outline:none;font-family:inherit;margin-top:6px}
+.fu-input:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+.fu-input::placeholder{color:#aaa}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.save-btn{width:100%;margin-top:8px;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.save-btn:active{opacity:.85}
+.save-btn:disabled{opacity:.5;cursor:default}
+.sync-btn{width:100%;margin-top:7px;padding:12px;background:#fff;color:#534AB7;border:1.5px solid #534AB7;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s}
+.sync-btn:active{background:#F8F7FF}
+.sync-btn:disabled{opacity:.5;cursor:default}
+.sync-btn.syncing{color:#888;border-color:#ccc}
+.sync-btn.synced{color:#2A6010;border-color:#6ab04c;background:#EAF3DE}
+.met-btn{width:100%;margin-top:6px;padding:11px;background:#F5F5F0;color:#444;border:1px solid rgba(0,0,0,0.12);border-radius:10px;font-size:14px;cursor:pointer}
+.nurture-btn{width:100%;margin-top:6px;padding:11px;background:#F5F5F0;color:#085041;border:1px solid rgba(83,200,150,0.3);border-radius:10px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* ── Follow-ups ─────────────────────────────────────────────── */
+.fu-card{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+.fu-name{font-size:15px;font-weight:600;color:#1a1a1a}
+.fu-org{font-size:12px;color:#888;margin-top:2px}
+.fu-action-box{font-size:13px;color:#444;margin-top:8px;line-height:1.55;padding:8px 10px;background:#FFF8EE;border-radius:8px;border-left:3px solid #F5A623}
+.fu-note-preview{font-size:12px;color:#777;margin-top:6px;font-style:italic;line-height:1.5}
+.fu-row{display:flex;gap:7px;margin-top:10px}
+.fu-done-btn{flex:1;font-size:12px;padding:8px;border:1px solid rgba(0,0,0,0.1);border-radius:8px;background:#F5F5F0;cursor:pointer;color:#555;display:flex;align-items:center;justify-content:center;gap:5px}
+.fu-sync-btn{flex:1;font-size:12px;padding:8px;border:1.5px solid #534AB7;border-radius:8px;background:#fff;cursor:pointer;color:#534AB7;display:flex;align-items:center;justify-content:center;gap:5px;font-weight:500}
+.fu-sync-btn.synced{border-color:#6ab04c;color:#2A6010;background:#EAF3DE}
+
+/* ── Pitch ──────────────────────────────────────────────────── */
+.pitch-hero{background:#534AB7;border-radius:14px;padding:18px;margin-bottom:10px}
+.pitch-hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.pitch-hero-text{font-size:14px;color:#fff;line-height:1.7;font-style:italic}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;border:1px solid rgba(255,255,255,0.25);padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.1);transition:all .15s}
+.copy-btn.copied{color:#A8E6C6;border-color:rgba(168,230,198,0.4)}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:#2A6010}
+.toast.error{background:#c0392b}
+
+/* ── Empty ──────────────────────────────────────────────────── */
+.empty{text-align:center;padding:48px 24px;color:#999;font-size:14px;line-height:1.7}
+
+/* ── Settings modal ─────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 20px 36px}
+.modal-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:16px}
+.modal-label{font-size:12px;font-weight:500;color:#666;margin-bottom:5px}
+.modal-input{width:100%;border:1px solid rgba(0,0,0,0.15);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;color:#1a1a1a;background:#F5F5F0}
+.modal-input:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+.modal-save{width:100%;margin-top:14px;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+.modal-close{width:100%;margin-top:8px;padding:11px;background:#F5F5F0;color:#444;border:none;border-radius:10px;font-size:14px;cursor:pointer}
+.settings-icon{cursor:pointer;padding:4px;opacity:.6}
+.settings-icon:hover{opacity:1}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.dot-on{background:#6ab04c}
+.dot-off{background:#e74c3c}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div class="topbar-title">SF Trip</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="topbar-sub" id="met-summary">0 of 20 met</div>
+        <div class="settings-icon" onclick="openSettings()" title="Configure Sheets sync">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#888" stroke-width="1.6"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v1.5M10 15.5V17M3 10h1.5M15.5 10H17M4.9 4.9l1.1 1.1M14 14l1.1 1.1M4.9 15.1L6 14M14 6l1.1-1.1"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="5.5"/><path d="M14 14l3 3"/></svg>
+      <input id="search" type="text" placeholder="Search by name or org..." oninput="onSearch()">
+    </div>
+  </div>
+
+  <div class="nav" id="nav">
+    <button class="nav-btn active" onclick="setTab('priority')">Priority</button>
+    <button class="nav-btn" onclick="setTab('all')">All</button>
+    <button class="nav-btn" onclick="setTab('followup')">Follow-ups</button>
+    <button class="nav-btn" onclick="setTab('pitch')">Pitch</button>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeSettingsOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Google Sheets sync</div>
+    <div class="modal-sub" id="sync-status-label">
+      <span class="status-dot dot-off" id="status-dot"></span>
+      <span id="status-text">Not configured — paste your Apps Script URL below</span>
+    </div>
+    <div class="modal-label">Apps Script web app URL</div>
+    <input class="modal-input" id="script-url-input" type="url" placeholder="https://script.google.com/macros/s/..." oninput="onUrlInput()">
+    <button class="modal-save" onclick="saveSettings()">Save & test connection</button>
+    <button class="modal-close" onclick="closeSettings()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIGURATION
+// Set your Apps Script deployment URL here OR via the settings
+// icon in the app. If you hard-code it here it will be used as
+// the default. Users can always override via settings.
+// ─────────────────────────────────────────────────────────────
+const DEFAULT_SCRIPT_URL = ''; // ← Paste your URL here after deploying
+
+// ─────────────────────────────────────────────────────────────
+// CONTACT DATA
+// ─────────────────────────────────────────────────────────────
+const C=[
+{id:'sp',name:'Steve Phillips',org:'Democracy in Color',ini:'SP',tier:0,
+ who:'Founder of Democracy in Color podcast and political media platform. Author of Brown Is the New White (NYT bestseller) and How We Win the Civil War (2022). Civil rights lawyer and major progressive philanthropist. His late wife Susan Sandler co-founded the Sandler Phillips Center; the Susan Sandler Fund deploys $10M/year in racial justice grants. Hosted Ebony on his podcast in 2023.',
+ angle:'Pure reconnection — no ask. Lead with your four-beat narrative: (1) the grief of leaving Greenpeace, (2) a year of deliberate reflection, (3) rediscovering yourself as a builder, (4) your current work as a swiss army knife for fledgling EJ orgs. The intellectual bridge: his Liberation Battle Plan from How We Win the Civil War maps directly onto your story. Counterstream is the living embodiment of his storytelling-as-infrastructure pillar — bridge it with the "modern-day griots" phrase from your essay.',
+ watch:'Susan Sandler passed December 2022 — you sent flowers. He pivoted quickly from the subject last time. Follow his lead entirely. The long-term vision (EJ org incubator) is the horizon goal — NOT for this meeting.',
+ fu:'Send The Shoots and the Canopy essay as a leave-behind after the meeting.',
+ cs:'—',adv:'High'},
+{id:'park',name:'Michael Connor',org:'Park Foundation',ini:'MC',tier:1,
+ who:'Private family foundation · $32M annual grantmaking · Ithaca, NY. Media program explicitly funds public interest media raising awareness of environmental, political, and social issues — including investigative journalism, public broadcasting, documentary film, and multi-platform storytelling with equity lens. Senior Program Officer Michael Connor handles Media, Democracy & Civil Society. ED Rachel Leon was previously ED of the Environmental Grantmakers Association.',
+ angle:'Lead with the Webby (announced April 21 — it\'s fresh). Frame Counterstream as EJ investigative storytelling reaching audiences traditional environmental journalism doesn\'t touch. Ask Michael Connor whether an LOI would be appropriate — they recommend contacting staff before submitting. Best immediate grant prospect at the event.',
+ watch:'They prefer nationally distributed content. Contact program staff before any formal LOI. Do not cold-apply.',
+ fu:'Email Michael Connor: ask if an LOI would be appropriate. Reference the Webby and The Nation partnership.',
+ cs:'Direct fit',adv:'Strong'},
+{id:'grace',name:'Scott Cullen',org:'Grace Communications Foundation',ini:'SC',tier:1,
+ who:'Operating + grantmaking foundation · $114M assets · New York. GRACE is itself an environmental media org — they build podcasts, consumer awareness tools, and public comms around food, water, and environmental issues. Scott Cullen sits on EGA and Sustainable Food System Funders boards.',
+ angle:'Peer conversation between two EJ media orgs doing adjacent work. Don\'t pitch for a grant. Explore collaboration, cross-promotion, and shared funder networks. Ask Scott directly: "Which funders in your network have recently shown interest in EJ podcast storytelling?" His answer will be a roadmap.',
+ watch:'GRACE is primarily an operating foundation — value here is network intelligence, not a direct grant to Counterstream.',
+ fu:'Send Counterstream overview. Follow up on any funder names Scott mentioned.',
+ cs:'Direct fit',adv:'Moderate'},
+{id:'overbrook',name:'Eric Weingartner',org:'Overbrook Foundation',ini:'EW',tier:1,
+ who:'NYC-based family foundation · $217M assets · ~$6M annual grants · No unsolicited proposals. Environment (US + Latin America) and Human Rights. Launched a specific environmental movement building portfolio in 2014. Funded Climate Justice Alliance. History of BIPOC-led EJ investment. President Eric Weingartner comes from Robin Hood Foundation.',
+ angle:'Frame Counterstream as movement infrastructure media — the counter-narrative that makes organizing stick. Reference their movement building portfolio directly. Share the story, invite a follow-up. Ask if they\'d like an introduction to Shilpi Chhotray.',
+ watch:'No unsolicited proposals. Share, don\'t pitch. Goal of this conversation is to earn a follow-up.',
+ fu:'Offer to introduce Eric to Shilpi Chhotray at Counterstream.',
+ cs:'Strong fit',adv:'Strong'},
+{id:'pointbreak',name:'Point Break Foundation',org:'Point Break Foundation',ini:'PB',tier:1,
+ who:'Private foundation · Plastic pollution & ocean health focus · Smaller, nimble. Dedicated specifically to plastic waste reduction and ocean conservancy. At this exact event — already in the room around EJ and plastic issues.',
+ angle:'Ask what draws them to this event and what they see as underfunded in the plastic space. Then: "Have you come across People over Plastic? 5 seasons, just competed at the Webbys against iHeart. Telling the frontline stories nobody else is telling." Simple. Let curiosity do the work.',
+ watch:'Smaller foundation = smaller grants, but can move faster. Good for early momentum and warm co-funder introductions.',
+ fu:'Send People over Plastic episode link + the Webby nomination info.',
+ cs:'Strong fit',adv:'Moderate'},
+{id:'schaub',name:'Nancy Schaub',org:'New Priorities Foundation',ini:'NS',tier:1,
+ who:'Individual philanthropist · Founder, New Priorities Foundation · SF-based · 25+ years in EJ philanthropy. Was president of the Bioneers board. Funds "citizen-initiated efforts toward a more vibrant and diverse environment."',
+ angle:'Peer conversation between two people who invest in people and frontline communities. Ask about her current priorities. Listen for where she sees gaps. Introduce Counterstream as citizen-led, frontline storytelling. Relationship to cultivate, not a pitch.',
+ watch:'Individual donor — trust and relationship are the primary currency. Don\'t rush to a specific ask. SF-based, so a longer relationship is possible.',
+ fu:'Connect on LinkedIn. Send The Shoots and the Canopy essay as a follow-up touchpoint.',
+ cs:'Strong fit',adv:'Strong'},
+{id:'bloomberg',name:'Bloomberg Philanthropies',org:'Bloomberg Philanthropies',ini:'BP',tier:2,
+ who:'Major foundation · $3.7B distributed in 2024. Launched an $85M Beyond Petrochemicals: People Over Pollution campaign partnering with frontline communities fighting plastic pollution. Media grantmaking is not their primary vehicle.',
+ angle:'Relationship conversation, not a pitch. Ask who their program officer is for Beyond Petrochemicals community engagement. Ask what communications support they see as missing from frontline plastic campaigns. Plant the seed that frontline storytelling is chronically underfunded.',
+ watch:'Invitation-only grantmaking. Goal: warm introduction to a program officer, not an immediate grant.',
+ fu:'Request name of program officer for Beyond Petrochemicals. Follow up with introduction note.',
+ cs:'Possible fit',adv:'Moderate'},
+{id:'packard',name:'Packard Foundation',org:'Packard Foundation',ini:'PF',tier:2,
+ who:'Major foundation · $8B+ assets · Los Altos, CA. Has a Racial Justice Initiative funding BIPOC-led orgs AND ocean/conservation grantmaking centering equity. Has funded media through Grist and InsideClimate News.',
+ angle:'Ask about the intersection of their Racial Justice Initiative and conservation/environment program — Counterstream lives exactly at that gap. For your advisory practice: pursue a program officer intro around capacity-building for equity-centered conservation.',
+ watch:'Only 15% of grants to first-time grantees, 1% from unsolicited proposals. This is a 2–3 year relationship build. Start with your advisory practice.',
+ fu:'Request program officer introduction — lead with advisory practice angle.',
+ cs:'Possible fit',adv:'Strong'},
+{id:'oak',name:'Oak Foundation',org:'Oak Foundation',ini:'OF',tier:2,
+ who:'Geneva-based global foundation · $200M+ annual grants. Has a specific Plastics and Petrochemicals subprogram. Accepts letters of inquiry. Tends toward larger organizations with international scope.',
+ angle:'Ask about their Plastics subprogram\'s openness to communications and frontline storytelling. The Webby is your proof that quality doesn\'t require a large org. Ask which U.S.-based program officer handles their plastics work.',
+ watch:'Geneva-based. Need to identify the U.S. program officer. Very few unsolicited requests approved annually.',
+ fu:'Identify U.S. program officer for Plastics subprogram. Send LOI inquiry.',
+ cs:'Possible fit',adv:'Moderate'},
+{id:'zegar',name:'Zegar Family Foundation',org:'Zegar Family Foundation',ini:'ZF',tier:2,
+ who:'Invitation-only NYC family foundation · $27M in grants in 2024 · Giving Pledge members since 2024. Funds environment, democratic participation, and racial justice.',
+ angle:'Don\'t pitch — connect. Share the Counterstream story naturally. Goal is a warm personal relationship that opens an invitation to submit. Ask about their evolving thinking on EJ narrative and movement communications.',
+ watch:'Fully invitation-only. No formal path to apply — relationship is the only door. This event is that door.',
+ fu:'Send personal follow-up note. No formal ask yet — relationship first.',
+ cs:'Possible fit',adv:'Moderate'},
+{id:'tundra',name:'Sally Liu',org:'Tundra Glacier Fund',ini:'SL',tier:2,
+ who:'Donor-advised fund at Silicon Valley Community Foundation, advised by Sally Liu (The Nature Conservancy California, Pacific Institute). Funded the California Black Freedom Fund — racial equity lens alongside conservation priorities.',
+ angle:'Ask Sally about the California Black Freedom Fund investment — what drew a conservation-focused fund to racial justice power building? That opens the door to Counterstream\'s narrative power-building mission.',
+ watch:'DAF structure = flexible and personal grantmaking. The relationship with Sally Liu is the path.',
+ fu:'Send follow-up note to Sally Liu. Reference the Black Freedom Fund conversation.',
+ cs:'Possible fit',adv:'Strong'},
+{id:'marisla',name:'Marisla Foundation',org:'Marisla Foundation',ini:'MF',tier:3,
+ who:'Laguna Beach private foundation · Anne Earhart (Getty Oil) · Marine conservation + toxic chemicals · ~$100K avg grant.',
+ angle:'Advisory intelligence. Ask about underfunded grantees in their network. Listen more than you talk.',
+ watch:'Small grants, narrow focus. Not an immediate Counterstream prospect.',
+ fu:'Add to long-term relationship list. No immediate follow-up needed.',
+ cs:'Limited',adv:'Moderate'},
+{id:'heinz',name:'Heinz Foundation',org:'Heinz Foundation',ini:'HF',tier:3,
+ who:'Foundation with history of EJ grantmaking and environmental leadership awards.',
+ angle:'Relationship building. Ask about EJ narrative gaps they\'re seeing in the field.',
+ watch:'No immediate Counterstream fit. Advisory practice intelligence only.',
+ fu:'Connect and add to long-term list.',
+ cs:'Limited',adv:'Moderate'},
+{id:'angell',name:'Paul M. Angell Foundation',org:'Paul M. Angell Family Foundation',ini:'PA',tier:3,
+ who:'Foundation · ocean + BIPOC community focus. Program officer Joanna Trotter handles plastic communications work.',
+ angle:'Ask about plastic comms work. Meet Joanna Trotter if she\'s present.',
+ watch:'Limited Counterstream fit near-term.',
+ fu:'Connect with Joanna Trotter if met. Follow up on plastics comms work.',
+ cs:'Limited',adv:'Moderate'},
+{id:'gerstner',name:'Gerstner Philanthropies',org:'Gerstner Philanthropies',ini:'GP',tier:3,
+ who:'Foundation focused on environment and education. Note: leadership may be in transition.',
+ angle:'Intelligence only. Note any leadership transitions mentioned.',
+ watch:'Limited fit. Brief introductory conversation.',
+ fu:'No follow-up needed unless a clear opening emerges.',
+ cs:'Limited',adv:'Limited'},
+{id:'volgenau',name:'Volgenau Foundation',org:'Volgenau Foundation',ini:'VF',tier:3,
+ who:'Foundation · conservation focus.',
+ angle:'Brief conversation. Ask about the conservation landscape.',
+ watch:'Limited fit across both goals.',
+ fu:'No immediate follow-up needed.',
+ cs:'Limited',adv:'Limited'},
+{id:'tortuga',name:'Tortuga Foundation',org:'Tortuga Foundation',ini:'TF',tier:4,
+ who:'Foundation · Northeast conservation focus.',
+ angle:'Listen and learn. No pitch.',
+ watch:'Not a near-term prospect.',
+ fu:'No follow-up needed.',
+ cs:'Low',adv:'Limited'},
+{id:'tempest',name:'Anjali Jaiswal',org:'Tempest Advisors',ini:'AJ',tier:4,
+ who:'Philanthropic consulting firm. Anjali Jaiswal is the key contact.',
+ angle:'Ask Anjali about EJ community strategy from a consulting perspective.',
+ watch:'Advisory firm, not a funder.',
+ fu:'Connect with Anjali on LinkedIn.',
+ cs:'Low',adv:'Moderate'},
+{id:'ho',name:'Robert H.N. Ho Family Foundation',org:'Robert H.N. Ho Family Foundation Global',ini:'RH',tier:4,
+ who:'Global foundation with some EJ thematic fit. U.S. presence is limited.',
+ angle:'Ask about U.S. presence and programs.',
+ watch:'Global focus. U.S. grantmaking limited.',
+ fu:'No follow-up needed unless U.S. program confirmed.',
+ cs:'Moderate',adv:'Limited'},
+{id:'astra',name:'Astra Foundation',org:'Astra Foundation',ini:'AF',tier:4,
+ who:'UK family foundation. Not a U.S. prospect.',
+ angle:'Introductory only. Be warm, be brief.',
+ watch:'UK-based. Not actionable for Counterstream or advisory practice.',
+ fu:'No follow-up needed.',
+ cs:'Low',adv:'Limited'},
+];
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// Persisted to localStorage so notes survive across sessions
+// ─────────────────────────────────────────────────────────────
+function loadState(){
+  try{
+    const saved=localStorage.getItem('ebony_sf_state');
+    if(saved){
+      const p=JSON.parse(saved);
+      return {
+        tab:'priority',search:'',view:'list',detail:null,
+        notes:p.notes||{},
+        warmth:p.warmth||{},
+        fuOverride:p.fuOverride||{},
+        met:new Set(p.met||[]),
+        fuDone:new Set(p.fuDone||[]),
+        synced:new Set(p.synced||[]),
+        scriptUrl:p.scriptUrl||DEFAULT_SCRIPT_URL
+      };
+    }
+  }catch(e){}
+  return {tab:'priority',search:'',view:'list',detail:null,
+    notes:{},warmth:{},fuOverride:{},
+    met:new Set(),fuDone:new Set(),synced:new Set(),
+    scriptUrl:DEFAULT_SCRIPT_URL};
+}
+
+function saveState(){
+  try{
+    localStorage.setItem('ebony_sf_state',JSON.stringify({
+      notes:S.notes,warmth:S.warmth,fuOverride:S.fuOverride,
+      met:[...S.met],fuDone:[...S.fuDone],synced:[...S.synced],
+      scriptUrl:S.scriptUrl
+    }));
+  }catch(e){}
+}
+
+const S=loadState();
+
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+function ac(c){if(c.id==='sp')return'av-sp';if(c.tier===1)return'av-t1';if(c.tier===2)return'av-t2';if(c.tier===3)return'av-t3';return'av-t4';}
+function tierBadge(c){
+  if(c.id==='sp')return'<span class="badge b-sp">Personal reconnection</span>';
+  const m=['','b-t1','b-t2','b-t3','b-t4'];
+  const l=['','Tier 1 — Priority','Tier 2 — Worth it','Tier 3 — Long game','Tier 4 — Listen'];
+  return`<span class="badge ${m[c.tier]}">${l[c.tier]}</span>`;
+}
+
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast '+(type?type:'');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+function updateSummary(){
+  document.getElementById('met-summary').textContent=S.met.size+' of '+C.length+' met';
+}
+
+// ─────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function setTab(t){
+  S.tab=t;S.view='list';S.search='';
+  document.getElementById('search').value='';
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['priority','all','followup','pitch'][i]===t);
+  });
+  render();
+}
+function onSearch(){S.search=document.getElementById('search').value.toLowerCase();S.view='list';render();}
+function openDetail(id){S.detail=id;S.view='detail';render();window.scrollTo(0,0);}
+function back(){S.view='list';S.detail=null;render();}
+
+// ─────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────
+function setWarmth(id,w){
+  S.warmth[id]=w;
+  document.querySelectorAll('.warmth-btn').forEach(b=>{
+    b.classList.toggle('sel',b.dataset.w===w);
+  });
+}
+
+function saveNote(id){
+  const noteEl=document.getElementById('ni-'+id);
+  const fuEl=document.getElementById('fi-'+id);
+  const v=(noteEl&&noteEl.value||'').trim();
+  const fuV=(fuEl&&fuEl.value||'').trim();
+  if(v){
+    const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    S.notes[id]=(S.notes[id]?S.notes[id]+'\n':'')+ts+': '+v;
+  }
+  if(fuV){S.fuOverride[id]=fuV;}
+  S.met.add(id);
+  saveState();
+  showToast('Saved','success');
+  render();
+}
+
+function markMet(id){S.met.add(id);saveState();render();}
+function fuDone(id){S.fuDone.add(id);saveState();render();}
+
+// ─────────────────────────────────────────────────────────────
+// SHEETS SYNC
+// ─────────────────────────────────────────────────────────────
+async function syncToSheets(id, btnEl){
+  const url=S.scriptUrl;
+  if(!url){
+    showToast('No Sheets URL — tap the ⚙ icon to configure','error');
+    return;
+  }
+  const c=C.find(x=>x.id===id);
+  if(!c)return;
+
+  if(btnEl){btnEl.disabled=true;btnEl.classList.add('syncing');btnEl.textContent='Syncing...';}
+
+  const payload={
+    action:'syncContact',
+    data:{
+      name:c.name,
+      org:c.org,
+      tier:c.tier,
+      warmth:S.warmth[id]||'',
+      note:S.notes[id]||'',
+      followupAction:S.fuOverride[id]||c.fu,
+      cs:c.cs
+    }
+  };
+
+  try{
+    const res=await fetch(url,{method:'POST',body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.success){
+      S.synced.add(id);
+      saveState();
+      if(btnEl){btnEl.classList.remove('syncing');btnEl.classList.add('synced');btnEl.textContent='✓ Synced to Sheets';}
+      showToast(c.name+' added to BD Pipeline','success');
+    } else {
+      throw new Error(data.error||'Unknown error');
+    }
+  }catch(err){
+    if(btnEl){btnEl.disabled=false;btnEl.classList.remove('syncing');btnEl.textContent='Sync to Sheets';}
+    showToast('Sync failed — check your URL in settings','error');
+  }
+}
+
+async function addToNurture(id){
+  const url=S.scriptUrl;
+  if(!url){showToast('No Sheets URL — tap the ⚙ icon to configure','error');return;}
+  const c=C.find(x=>x.id===id);
+  if(!c)return;
+  const payload={
+    action:'addToNurture',
+    data:{name:c.name,org:c.org,tier:c.tier,warmth:S.warmth[id]||''}
+  };
+  try{
+    const res=await fetch(url,{method:'POST',body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.success){showToast(c.name+' added to Nurture List','success');}
+    else{throw new Error(data.error);}
+  }catch(e){showToast('Sync failed — check your URL in settings','error');}
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETTINGS MODAL
+// ─────────────────────────────────────────────────────────────
+function openSettings(){
+  document.getElementById('script-url-input').value=S.scriptUrl||'';
+  updateStatusIndicator();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeSettings(){document.getElementById('modal-overlay').classList.remove('open');}
+function closeSettingsOutside(e){if(e.target===document.getElementById('modal-overlay'))closeSettings();}
+function onUrlInput(){updateStatusIndicator();}
+function updateStatusIndicator(){
+  const val=document.getElementById('script-url-input').value.trim();
+  const dot=document.getElementById('status-dot');
+  const txt=document.getElementById('status-text');
+  if(val&&val.startsWith('https://script.google.com')){
+    dot.className='status-dot dot-on';
+    txt.textContent='URL looks good — save to activate';
+  } else if(val){
+    dot.className='status-dot dot-off';
+    txt.textContent='URL doesn\'t look right — check it';
+  } else {
+    dot.className='status-dot dot-off';
+    txt.textContent='Not configured — paste your Apps Script URL below';
+  }
+}
+async function saveSettings(){
+  const url=document.getElementById('script-url-input').value.trim();
+  S.scriptUrl=url;
+  saveState();
+  closeSettings();
+  if(url){
+    showToast('Testing connection...');
+    try{
+      const res=await fetch(url);
+      const data=await res.json();
+      if(data.success)showToast('Connected to Google Sheets','success');
+      else showToast('Connected but got unexpected response');
+    }catch(e){showToast('Could not reach that URL — check it','error');}
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────
+function render(){
+  updateSummary();
+  const el=document.getElementById('content');
+  if(S.view==='detail'){el.innerHTML=renderDetail(S.detail);return;}
+  if(S.tab==='pitch'){el.innerHTML=renderPitch();return;}
+  if(S.tab==='followup'){el.innerHTML=renderFU();return;}
+
+  let contacts=C;
+  if(S.search){
+    contacts=C.filter(c=>c.name.toLowerCase().includes(S.search)||c.org.toLowerCase().includes(S.search));
+  } else if(S.tab==='priority'){
+    contacts=C.filter(c=>c.id==='sp'||c.tier===1||c.tier===2);
+  }
+
+  if(!contacts.length){el.innerHTML='<div class="empty">No contacts found.</div>';return;}
+
+  const groups=S.search?[{l:'Search results',items:contacts}]:[
+    {l:'Personal reconnection',items:contacts.filter(c=>c.id==='sp')},
+    {l:'Tier 1 — Priority',items:contacts.filter(c=>c.tier===1)},
+    {l:'Tier 2 — Worth the conversation',items:contacts.filter(c=>c.tier===2)},
+    {l:'Tier 3 — Long game',items:contacts.filter(c=>c.tier===3)},
+    {l:'Tier 4 — Listen &amp; learn',items:contacts.filter(c=>c.tier===4)},
+  ].filter(g=>g.items.length);
+
+  el.innerHTML=groups.map(g=>`
+    <div class="section-label">${g.l}</div>
+    ${g.items.map(c=>`
+      <div class="person-card" onclick="openDetail('${c.id}')">
+        <div class="card-top">
+          <div class="avatar ${ac(c)}">${c.ini}</div>
+          <div style="flex:1;min-width:0">
+            <div class="card-name">${c.name}</div>
+            <div class="card-org">${c.org}</div>
+            <div class="card-meta">
+              ${S.met.has(c.id)?'<span class="badge b-met">Met</span>':''}
+              ${S.synced.has(c.id)?'<span class="badge b-synced">In Sheets</span>':''}
+              ${S.notes[c.id]&&!S.fuDone.has(c.id)?'<span class="badge b-fu">Follow-up pending</span>':''}
+              ${c.cs!=='—'?`<span class="badge b-cs">CS: ${c.cs}</span>`:''}
+            </div>
+          </div>
+        </div>
+        <div class="card-angle">${c.angle.substring(0,130)}${c.angle.length>130?'…':''}</div>
+      </div>`).join('')}
+  `).join('');
+}
+
+function renderDetail(id){
+  const c=C.find(x=>x.id===id);
+  const note=S.notes[id]||'';
+  const warmth=S.warmth[id]||'';
+  const fuText=S.fuOverride[id]||c.fu;
+  const isSynced=S.synced.has(id);
+
+  return `
+    <div class="detail-back" onclick="back()">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4l-6 6 6 6"/></svg>
+      Back
+    </div>
+    <div class="detail-header">
+      <div class="detail-avatar ${ac(c)}">${c.ini}</div>
+      <div style="flex:1">
+        <div class="detail-name">${c.name}</div>
+        <div class="detail-org">${c.org}</div>
+        <div class="detail-badges">
+          ${tierBadge(c)}
+          ${c.cs!=='—'?`<span class="badge b-cs">CS: ${c.cs}</span>`:''}
+          ${S.met.has(id)?'<span class="badge b-met">Met</span>':''}
+          ${isSynced?'<span class="badge b-synced">In Sheets</span>':''}
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Who they are</div>
+      <p class="block-text">${c.who}</p>
+    </div>
+    <div class="block">
+      <div class="block-label">Your conversation angle</div>
+      <p class="block-text">${c.angle}</p>
+    </div>
+    <div class="block">
+      <div class="block-label block-label-warn">Watch for</div>
+      <p class="block-text block-text-warn">${c.watch}</p>
+    </div>
+
+    <div class="block">
+      <div class="block-label">After this conversation</div>
+      ${note?`<div class="note-existing">${note}</div>`:''}
+      <div class="block-label" style="margin-bottom:5px">How did it go?</div>
+      <div class="warmth-row">
+        <button class="warmth-btn w-warm${warmth==='warm'?' sel':''}" data-w="warm" onclick="setWarmth('${id}','warm')">Warm</button>
+        <button class="warmth-btn w-luke${warmth==='lukewarm'?' sel':''}" data-w="lukewarm" onclick="setWarmth('${id}','lukewarm')">Lukewarm</button>
+        <button class="warmth-btn w-cold${warmth==='cold'?' sel':''}" data-w="cold" onclick="setWarmth('${id}','cold')">Cold</button>
+      </div>
+      <div class="block-label" style="margin-bottom:5px">Note — what did you learn or promise?</div>
+      <textarea class="note-area" id="ni-${id}" placeholder="Quick capture — anything useful before you forget..."></textarea>
+      <div class="block-label" style="margin-top:10px;margin-bottom:3px">Follow-up action</div>
+      <input class="fu-input" id="fi-${id}" type="text" value="${fuText}" placeholder="What do you need to do next?">
+      <button class="save-btn" onclick="saveNote('${id}')">Save note + mark as met</button>
+      ${!S.met.has(id)?`<button class="met-btn" onclick="markMet('${id}')">Just mark as met</button>`:''}
+      <button class="sync-btn${isSynced?' synced':''}" id="sync-${id}" onclick="syncToSheets('${id}',this)" ${isSynced?'disabled':''}>
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10a6 6 0 0 1 10.7-3.7"/><path d="M16 10a6 6 0 0 1-10.7 3.7"/><path d="M17 6.3l-.3 3.7-3.7-.3"/><path d="M3 13.7l.3-3.7 3.7.3"/></svg>
+        ${isSynced?'✓ Synced to Sheets':'Sync to BD Pipeline'}
+      </button>
+      ${S.met.has(id)&&!isSynced?`<button class="nurture-btn" onclick="addToNurture('${id}')">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 17s-7-4-7-9a7 7 0 0 1 14 0c0 5-7 9-7 9z"/></svg>
+        Add to Nurture List instead
+      </button>`:''}
+    </div>
+  `;
+}
+
+function renderFU(){
+  const pending=C.filter(c=>S.met.has(c.id)&&!S.fuDone.has(c.id));
+  if(!pending.length)return'<div class="empty">No pending follow-ups yet.<br><br>After you meet someone and save a note, they\'ll appear here.</div>';
+  return`<div class="section-label">Needs follow-up · ${pending.length} contact${pending.length!==1?'s':''}</div>`+
+  pending.map(c=>`
+    <div class="fu-card">
+      <div class="fu-name">${c.name}</div>
+      <div class="fu-org">${c.org}</div>
+      <div class="fu-action-box">${S.fuOverride[c.id]||c.fu}</div>
+      ${S.notes[c.id]?`<div class="fu-note-preview">${S.notes[c.id].split('\n').slice(-1)[0]}</div>`:''}
+      <div class="fu-row">
+        <button class="fu-done-btn" onclick="fuDone('${c.id}')">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l5 5 7-8"/></svg>
+          Done
+        </button>
+        <button class="fu-sync-btn${S.synced.has(c.id)?' synced':''}" onclick="syncToSheets('${c.id}',this)" ${S.synced.has(c.id)?'disabled':''}>
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10a6 6 0 0 1 10.7-3.7"/><path d="M16 10a6 6 0 0 1-10.7 3.7"/><path d="M17 6.3l-.3 3.7-3.7-.3"/><path d="M3 13.7l.3-3.7 3.7.3"/></svg>
+          ${S.synced.has(c.id)?'In Sheets':'Push to Sheets'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPitch(){
+  return`
+    <div class="pitch-hero">
+      <div class="pitch-hero-label">Counterstream pitch — pull this up anytime</div>
+      <p class="pitch-hero-text">"Counterstream Media is a small nonprofit EJ media org — woman of color-led — that just competed at the Webbys as an underdog against iHeart and Audible. They produce A People's Climate with The Nation and People over Plastic — frontline environmental justice storytelling done at a level that rivals organizations twenty times their size. They're doing exactly what the movement needs and exactly what philanthropy chronically underfunds: narrative infrastructure, not just campaigns. They need an institutional backer."</p>
+      <div class="copy-btn" id="cpbtn" onclick="doCopy()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M5 13H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"/></svg>
+        Copy pitch
+      </div>
+    </div>
+    <div class="section-label">The hook that opens every Counterstream conversation</div>
+    <div class="block">
+      <p class="block-text" style="font-style:italic;color:#534AB7">"They just competed at the Webbys against iHeart and Audible — and almost won."</p>
+      <p class="block-text" style="margin-top:8px;font-size:13px;color:#666">Webby finalist announced April 21, 2026. Use it as the opener every time — it earns the rest of the story.</p>
+    </div>
+    <div class="section-label">Counterstream's work</div>
+    <div class="block">
+      <p class="block-text" style="font-size:13px">People over Plastic podcast (5 seasons) · A People's Climate with The Nation · The Margin zine · Peace &amp; Riot · Live Story Salons</p>
+      <p class="block-text" style="font-size:13px;margin-top:10px;color:#666">President: <strong>Shilpi Chhotray</strong> · Oakland, CA<br>Current primary funder: Wildseeds Fund ($20–75K range)<br>Webby finalist: 30th Annual — vs. iHeart, Audible, Wondery, SiriusXM</p>
+    </div>
+    <div class="section-label">Tier 1 Counterstream targets</div>
+    <div class="block">
+      <p class="block-text" style="font-size:13px;line-height:1.9">Park Foundation (Michael Connor) — best LOI prospect<br>Point Break Foundation — plastic focus, direct fit<br>Overbrook Foundation — movement building media angle<br>Nancy Schaub — individual donor, citizen-led EJ<br>Grace Communications (Scott Cullen) — ask for funder network intel</p>
+    </div>
+  `;
+}
+
+function doCopy(){
+  const t='Counterstream Media is a small nonprofit EJ media org — woman of color-led — that just competed at the Webbys as an underdog against iHeart and Audible. They produce A People\'s Climate with The Nation and People over Plastic — frontline environmental justice storytelling done at a level that rivals organizations twenty times their size. They need an institutional backer.';
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.getElementById('cpbtn');
+    b.classList.add('copied');
+    b.innerHTML='<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10l5 5 7-8"/></svg> Copied';
+    setTimeout(()=>{
+      b.classList.remove('copied');
+      b.innerHTML='<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M5 13H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"/></svg> Copy pitch';
+    },2000);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
