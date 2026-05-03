@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -144,6 +144,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
 .dot-on{background:#6ab04c}
 .dot-off{background:#e74c3c}
+/* ── Add Contact FAB ────────────────────────────────────────── */
+.fab{position:fixed;bottom:28px;right:calc(50% - 215px + 16px);width:52px;height:52px;border-radius:50%;background:#534AB7;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(83,74,183,0.35);z-index:18;transition:transform .15s}
+.fab:active{transform:scale(.93)}
+@media(max-width:430px){.fab{right:16px}}
+/* ── Add Contact Modal ──────────────────────────────────────── */
+.add-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-end;justify-content:center}
+.add-overlay.open{display:flex}
+.add-modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 20px 36px;max-height:92vh;overflow-y:auto}
+.add-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:16px}
+.add-field{margin-bottom:12px}
+.add-label{font-size:12px;font-weight:500;color:#666;margin-bottom:4px}
+.add-input{width:100%;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:10px 12px;font-size:14px;background:#F5F5F0;color:#1a1a1a;outline:none;font-family:inherit}
+.add-input:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+.add-input::placeholder{color:#aaa}
+.add-textarea{width:100%;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:10px 12px;font-size:14px;background:#F5F5F0;color:#1a1a1a;resize:none;min-height:68px;font-family:inherit;outline:none}
+.add-textarea:focus{border-color:rgba(83,74,183,0.4);background:#fff}
+.add-textarea::placeholder{color:#aaa}
+.av-field{background:#E8E6F8;color:#534AB7}
 </style>
 </head>
 <body>
@@ -177,6 +195,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Add Contact FAB -->
+<button class="fab" onclick="openAddContact()" title="Add new contact">
+  <svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 4v12M4 10h12"/></svg>
+</button>
+
+<!-- Add Contact Modal -->
+<div class="add-overlay" id="add-overlay" onclick="closeAddOutside(event)">
+  <div class="add-modal">
+    <div class="add-title">New contact</div>
+    <div class="add-field"><div class="add-label">Name *</div><input class="add-input" id="add-name" type="text" placeholder="First and last name"></div>
+    <div class="add-field"><div class="add-label">Organization</div><input class="add-input" id="add-org" type="text" placeholder="Foundation, company, or org"></div>
+    <div class="add-field"><div class="add-label">Email</div><input class="add-input" id="add-email" type="email" placeholder="their@email.com"></div>
+    <div class="add-field">
+      <div class="add-label">How did it go?</div>
+      <div class="warmth-row" style="margin-bottom:0">
+        <button class="warmth-btn w-warm" data-aw="warm" onclick="setAddWarmth('warm')">Warm</button>
+        <button class="warmth-btn w-luke" data-aw="lukewarm" onclick="setAddWarmth('lukewarm')">Lukewarm</button>
+        <button class="warmth-btn w-cold" data-aw="cold" onclick="setAddWarmth('cold')">Cold</button>
+      </div>
+    </div>
+    <div class="add-field"><div class="add-label">Quick note</div><textarea class="add-textarea" id="add-note" placeholder="What did you learn? What did they say?"></textarea></div>
+    <div class="add-field"><div class="add-label">Follow-up action</div><input class="add-input" id="add-fu" type="text" placeholder="What do you need to do next?"></div>
+    <button class="save-btn" onclick="saveNewContact()">Save contact</button>
+    <button class="met-btn" style="margin-top:8px" onclick="closeAdd()">Cancel</button>
+  </div>
+</div>
 
 <!-- Settings Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeSettingsOutside(event)">
@@ -345,14 +390,15 @@ function loadState(){
         met:new Set(p.met||[]),
         fuDone:new Set(p.fuDone||[]),
         synced:new Set(p.synced||[]),
-        scriptUrl:p.scriptUrl||DEFAULT_SCRIPT_URL
+        scriptUrl:p.scriptUrl||DEFAULT_SCRIPT_URL,
+        fieldContacts:p.fieldContacts||[]
       };
     }
   }catch(e){}
   return {tab:'priority',search:'',view:'list',detail:null,
     notes:{},warmth:{},fuOverride:{},
     met:new Set(),fuDone:new Set(),synced:new Set(),
-    scriptUrl:DEFAULT_SCRIPT_URL};
+    scriptUrl:DEFAULT_SCRIPT_URL,fieldContacts:[]};
 }
 
 function saveState(){
@@ -360,7 +406,7 @@ function saveState(){
     localStorage.setItem('ebony_sf_state',JSON.stringify({
       notes:S.notes,warmth:S.warmth,fuOverride:S.fuOverride,
       met:[...S.met],fuDone:[...S.fuDone],synced:[...S.synced],
-      scriptUrl:S.scriptUrl
+      scriptUrl:S.scriptUrl,fieldContacts:S.fieldContacts
     }));
   }catch(e){}
 }
@@ -370,7 +416,7 @@ const S=loadState();
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
-function ac(c){if(c.id==='sp')return'av-sp';if(c.tier===1)return'av-t1';if(c.tier===2)return'av-t2';if(c.tier===3)return'av-t3';return'av-t4';}
+function ac(c){if(c.id==='sp')return'av-sp';if(c.tier===1)return'av-t1';if(c.tier===2)return'av-t2';if(c.tier===3)return'av-t3';if(c.fieldAdded)return'av-field';return'av-t4';}
 function tierBadge(c){
   if(c.id==='sp')return'<span class="badge b-sp">Personal reconnection</span>';
   const m=['','b-t1','b-t2','b-t3','b-t4'];
@@ -388,7 +434,8 @@ function showToast(msg,type=''){
 }
 
 function updateSummary(){
-  document.getElementById('met-summary').textContent=S.met.size+' of '+C.length+' met';
+  const total=C.length+S.fieldContacts.length;
+  document.getElementById('met-summary').textContent=S.met.size+' of '+total+' met';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -434,6 +481,58 @@ function saveNote(id){
 
 function markMet(id){S.met.add(id);saveState();render();}
 function fuDone(id){S.fuDone.add(id);saveState();render();}
+
+// ─────────────────────────────────────────────────────────────
+// ADD CONTACT (field capture)
+// ─────────────────────────────────────────────────────────────
+let addWarmthVal='';
+function openAddContact(){
+  addWarmthVal='';
+  ['add-name','add-org','add-email','add-note','add-fu'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  document.querySelectorAll('.warmth-btn[data-aw]').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('add-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('add-name').focus(),100);
+}
+function closeAdd(){document.getElementById('add-overlay').classList.remove('open');}
+function closeAddOutside(e){if(e.target===document.getElementById('add-overlay'))closeAdd();}
+function setAddWarmth(w){
+  addWarmthVal=w;
+  document.querySelectorAll('.warmth-btn[data-aw]').forEach(b=>{
+    b.classList.toggle('sel',b.dataset.aw===w);
+  });
+}
+function saveNewContact(){
+  const name=document.getElementById('add-name').value.trim();
+  if(!name){showToast('Name is required','error');return;}
+  const id='field_'+Date.now();
+  const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const contact={
+    id,
+    name,
+    org:document.getElementById('add-org').value.trim(),
+    email:document.getElementById('add-email').value.trim(),
+    ini:name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(),
+    tier:5,
+    who:'Added in the field during SF trip.',
+    angle:'',
+    watch:'',
+    fu:document.getElementById('add-fu').value.trim()||'Follow up after the trip.',
+    cs:'—',adv:'—',
+    fieldAdded:true
+  };
+  S.fieldContacts.push(contact);
+  S.met.add(id);
+  S.warmth[id]=addWarmthVal;
+  const note=document.getElementById('add-note').value.trim();
+  if(note){S.notes[id]=ts+': '+note;}
+  saveState();
+  closeAdd();
+  showToast(name+' saved','success');
+  render();
+}
 
 // ─────────────────────────────────────────────────────────────
 // SHEETS SYNC
@@ -542,10 +641,13 @@ function render(){
   if(S.tab==='followup'){el.innerHTML=renderFU();return;}
 
   let contacts=C;
+  const allContacts=[...C,...S.fieldContacts];
   if(S.search){
-    contacts=C.filter(c=>c.name.toLowerCase().includes(S.search)||c.org.toLowerCase().includes(S.search));
+    contacts=allContacts.filter(c=>c.name.toLowerCase().includes(S.search)||c.org.toLowerCase().includes(S.search));
   } else if(S.tab==='priority'){
     contacts=C.filter(c=>c.id==='sp'||c.tier===1||c.tier===2);
+  } else {
+    contacts=allContacts;
   }
 
   if(!contacts.length){el.innerHTML='<div class="empty">No contacts found.</div>';return;}
@@ -556,6 +658,7 @@ function render(){
     {l:'Tier 2 — Worth the conversation',items:contacts.filter(c=>c.tier===2)},
     {l:'Tier 3 — Long game',items:contacts.filter(c=>c.tier===3)},
     {l:'Tier 4 — Listen &amp; learn',items:contacts.filter(c=>c.tier===4)},
+    {l:'Added in the field',items:contacts.filter(c=>c.fieldAdded)},
   ].filter(g=>g.items.length);
 
   el.innerHTML=groups.map(g=>`
@@ -581,7 +684,7 @@ function render(){
 }
 
 function renderDetail(id){
-  const c=C.find(x=>x.id===id);
+  const c=C.find(x=>x.id===id)||S.fieldContacts.find(x=>x.id===id);
   const note=S.notes[id]||'';
   const warmth=S.warmth[id]||'';
   const fuText=S.fuOverride[id]||c.fu;
@@ -600,9 +703,11 @@ function renderDetail(id){
         <div class="detail-badges">
           ${tierBadge(c)}
           ${c.cs!=='—'?`<span class="badge b-cs">CS: ${c.cs}</span>`:''}
+          ${c.fieldAdded?'<span class="badge b-fu">Field addition</span>':''}
           ${S.met.has(id)?'<span class="badge b-met">Met</span>':''}
           ${isSynced?'<span class="badge b-synced">In Sheets</span>':''}
         </div>
+        ${c.email?`<div style="font-size:13px;color:#534AB7;margin-top:8px">${c.email}</div>`:''}
       </div>
     </div>
 
@@ -647,7 +752,8 @@ function renderDetail(id){
 }
 
 function renderFU(){
-  const pending=C.filter(c=>S.met.has(c.id)&&!S.fuDone.has(c.id));
+  const allContacts=[...C,...S.fieldContacts];
+  const pending=allContacts.filter(c=>S.met.has(c.id)&&!S.fuDone.has(c.id));
   if(!pending.length)return'<div class="empty">No pending follow-ups yet.<br><br>After you meet someone and save a note, they\'ll appear here.</div>';
   return`<div class="section-label">Needs follow-up · ${pending.length} contact${pending.length!==1?'s':''}</div>`+
   pending.map(c=>`
